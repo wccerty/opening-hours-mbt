@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="在浏览器中解析并求值 OpenStreetMap opening_hours 表达式。"
+    />
+    <meta name="theme-color" content="#e9e8df" />
+    <title>Opening Hours Lab — OSM 营业时间解析器</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="masthead">
+        <a class="wordmark" href="#top" aria-label="Opening Hours Lab 首页">
+          <span class="wordmark-icon" aria-hidden="true">OH</span>
+          <span>Opening Hours<br /><strong>Field Lab</strong></span>
+        </a>
+        <div class="masthead-note">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span>OSM 规则解析器</span>
+          <span class="masthead-year">2026 / 01</span>
+        </div>
+      </header>
+
+      <section class="intro" id="top" aria-labelledby="page-title">
+        <p class="eyebrow">MAP THE MOMENT · 本地计算</p>
+        <h1 id="page-title">营业时间，<br /><em>逐分钟可查。</em></h1>
+        <p class="intro-copy">
+          写下 OSM <code>opening_hours</code> 规则，选定一个本地时间，立即查看营业状态和下一次变化。
+        </p>
+      </section>
+
+      <section class="workbench" aria-label="营业时间表达式试算">
+        <form id="hours-form" class="input-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">01 / 输入规则</p>
+              <h2>试算一条表达式</h2>
+            </div>
+            <span class="panel-index">PARSER</span>
+          </div>
+
+          <label for="expression">OSM 表达式</label>
+          <textarea
+            id="expression"
+            name="expression"
+            rows="3"
+            spellcheck="false"
+            autocomplete="off"
+            required
+          >Mo-Fr 09:00-18:00; Sa 10:00-14:00; PH off</textarea>
+
+          <div class="sample-row" aria-label="表达式示例">
+            <button type="button" class="sample-chip" data-expression="Mo-Fr 09:00-12:00,13:00-18:00; Sa 10:00-14:00">工作日＋午休</button>
+            <button type="button" class="sample-chip" data-expression="Mo-Su 09:00-17:00; Dec 24-26 off">圣诞日期</button>
+            <button type="button" class="sample-chip" data-expression="Fr-Sa 18:00-02:00">跨午夜</button>
+            <button type="button" class="sample-chip" data-expression="Jan-Mar Mo 09:00-12:00">月份范围</button>
+          </div>
+
+          <div class="field-row">
+            <div class="datetime-field">
+              <label for="datetime">本地日期与时间</label>
+              <input id="datetime" name="datetime" type="datetime-local" required />
+            </div>
+            <label class="calendar-toggle" for="china-calendar">
+              <input id="china-calendar" type="checkbox" checked />
+              <span class="toggle-copy">
+                <strong>注入中国 2026 放假日历</strong>
+                <small id="calendar-status">正在读取示例数据…</small>
+              </span>
+            </label>
+          </div>
+
+          <button class="submit-button" type="submit">
+            <span>计算营业状态</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+          <p class="privacy-note">所有计算都在此浏览器完成，表达式不会发送到服务器。</p>
+        </form>
+
+        <aside class="result-panel" aria-labelledby="result-title">
+          <div class="result-topline">
+            <p class="eyebrow">02 / 计算结果</p>
+            <span class="result-mark" aria-hidden="true">↘</span>
+          </div>
+          <h2 id="result-title">此刻状态</h2>
+          <div id="result" class="result-output" role="status" aria-live="polite" aria-atomic="true">
+            <span class="result-placeholder">填写规则后开始试算。</span>
+          </div>
+          <div class="result-rule" aria-hidden="true"></div>
+          <p class="result-caption">下一次状态变化</p>
+          <p id="next-change" class="next-change">等待计算</p>
+          <div class="result-footnote">
+            <span class="footnote-number">i</span>
+            <p>日期按本地日历计算，不应用时区换算。取消勾选日历时，PH 与 SH 不会匹配任何日期。</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="syntax-strip" aria-label="当前支持的语法">
+        <div class="syntax-heading">
+          <p class="eyebrow">SYNTAX / 目前支持</p>
+          <span>规范子集</span>
+        </div>
+        <div class="syntax-tags">
+          <code>Mo-Fr</code><code>09:00-12:00,13:00-18:00</code><code>;</code>
+          <code>24/7</code><code>off / closed</code><code>Jan-Mar</code>
+          <code>Dec 24-26</code><code>22:00-02:00</code><code>PH / SH</code>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <span>OPENING HOURS FIELD LAB</span>
+        <span>基于 OpenStreetMap opening_hours 规范</span>
+        <a href="https://github.com/wccerty/opening-hours-mbt">项目仓库 ↗</a>
+      </footer>
+    </main>
+  </body>
+</html>

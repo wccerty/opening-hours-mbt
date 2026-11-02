@@ -4,3 +4,5 @@ target/
 target
 .mooncakes/
 .moonagent/
+web/demo/assets/bridge.js
+web/demo/china-2026-holidays.json
