@@ -1,0 +1,61 @@
+name: MoonBit CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MoonBit
+        uses: hustcer/setup-moonbit@v1
+      - name: Check formatting
+        run: moon fmt --check
+      - name: Type check
+        run: moon check --deny-warn
+      - name: Run tests
+        run: moon test
+      - name: Build CLI
+        run: moon build cmd/cli --target native --release
+      - name: Build WebAssembly bridge
+        run: moon build web/bridge --target wasm --release
+      - name: Build JavaScript bridge
+        run: moon build web/bridge --target js --release
+
+  publish-demo:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MoonBit
+        uses: hustcer/setup-moonbit@v1
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Build browser demo
+        run: |
+          moon build web/bridge --target js --release
+          mkdir -p web/demo/assets
+          cp _build/js/release/build/web/bridge/bridge.js web/demo/assets/bridge.js
+          cp data/china-2026-holidays.json web/demo/china-2026-holidays.json
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/demo
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
