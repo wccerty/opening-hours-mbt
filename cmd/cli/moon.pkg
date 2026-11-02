@@ -1,0 +1,6 @@
+import {
+  "wccerty/opening-hours-mbt" @opening_hours,
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")
