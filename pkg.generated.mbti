@@ -2,10 +2,48 @@
 package "wccerty/opening-hours-mbt"
 
 // Values
+pub fn parse(String) -> Result[Expr, ParseError]
 
 // Errors
 
 // Types and methods
+pub(all) struct Date {
+  year : Int32
+  month : Int32
+  day : Int32
+}
+
+pub(all) struct DateTime {
+  date : Date
+  hour : Int32
+  minute : Int32
+}
+
+pub(all) struct Expr {
+  rules : Array[Rule]
+}
+
+pub(all) struct ParseError {
+  message : String
+  position : Int32
+}
+
+pub(all) struct Rule {
+  weekdays : Array[Int32]
+  times : Array[TimeRange]
+  state : RuleState
+  position : Int32
+}
+
+pub(all) enum RuleState {
+  Open
+  Closed
+}
+
+pub(all) struct TimeRange {
+  start_minute : Int32
+  end_minute : Int32
+}
 
 // Type aliases
 
