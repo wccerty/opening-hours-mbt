@@ -2,7 +2,11 @@
 package "wccerty/opening-hours-mbt"
 
 // Values
+pub fn empty_holiday_calendar() -> HolidayCalendar
+
 pub fn is_open(Expr, DateTime) -> Result[Bool, EvaluationError]
+
+pub fn is_open_with_calendar(Expr, DateTime, HolidayCalendar) -> Result[Bool, EvaluationError]
 
 pub fn new_date(Int32, Int32, Int32) -> Result[Date, EvaluationError]
 
@@ -10,9 +14,15 @@ pub fn new_datetime(Date, Int32, Int32) -> Result[DateTime, EvaluationError]
 
 pub fn next_change(Expr, DateTime) -> Result[DateTime?, EvaluationError]
 
+pub fn next_change_with_calendar(Expr, DateTime, HolidayCalendar) -> Result[DateTime?, EvaluationError]
+
 pub fn opening_periods_for_day(Expr, Date) -> Result[Array[TimeRange], EvaluationError]
 
+pub fn opening_periods_for_day_with_calendar(Expr, Date, HolidayCalendar) -> Result[Array[TimeRange], EvaluationError]
+
 pub fn opening_periods_for_week(Expr, Date) -> Result[Array[DailySchedule], EvaluationError]
+
+pub fn opening_periods_for_week_with_calendar(Expr, Date, HolidayCalendar) -> Result[Array[DailySchedule], EvaluationError]
 
 pub fn parse(String) -> Result[Expr, ParseError]
 
@@ -46,6 +56,23 @@ pub(all) struct Expr {
   rules : Array[Rule]
 }
 
+pub(all) struct HolidayCalendar {
+  public_holidays : Array[Date]
+  school_holidays : Array[Date]
+}
+
+pub(all) enum HolidayKind {
+  PublicHoliday
+  SchoolHoliday
+}
+
+pub(all) struct MonthDayRange {
+  start_month : Int32
+  start_day : Int32
+  end_month : Int32
+  end_day : Int32
+}
+
 pub(all) struct ParseError {
   message : String
   position : Int32
@@ -53,6 +80,9 @@ pub(all) struct ParseError {
 
 pub(all) struct Rule {
   weekdays : Array[Int32]
+  months : Array[Int32]
+  dates : Array[MonthDayRange]
+  holidays : Array[HolidayKind]
   times : Array[TimeRange]
   state : RuleState
   position : Int32

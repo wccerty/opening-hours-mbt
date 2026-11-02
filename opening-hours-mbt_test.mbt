@@ -297,3 +297,125 @@ test "不合法的本地日期时间返回求值错误" {
     None => fail("24/7 应当可以解析")
   }
 }
+
+///|
+test "解析月份集合、同月日期段与跨月日期段" {
+  match
+    @opening-hours-mbt.parse(
+      "Jan-Mar Mo 09:00-12:00; Dec 24-26 off; Dec 24-Jan 3 off",
+    ) {
+    Ok(expr) => {
+      assert_eq(expr.rules.length(), 3)
+      assert_eq(expr.rules[0].months, [1, 2, 3])
+      assert_eq(expr.rules[1].dates[0].start_month, 12)
+      assert_eq(expr.rules[1].dates[0].start_day, 24)
+      assert_eq(expr.rules[1].dates[0].end_day, 26)
+      assert_eq(expr.rules[2].dates[0].end_month, 1)
+      assert_eq(expr.rules[2].dates[0].end_day, 3)
+      assert_eq(expr.rules[2].months.length(), 0)
+    }
+    Err(_) => fail("月份和月日选择器应当可以解析")
+  }
+}
+
+///|
+test "月份范围与日期范围共同限制营业日" {
+  match parsed("Jan-Mar Mo 09:00-12:00") {
+    Some(expr) => {
+      assert_eq(open_result(expr, at(2027, 1, 4, 10, 0)), Some(true))
+      assert_eq(open_result(expr, at(2027, 3, 1, 10, 0)), Some(true))
+      assert_eq(open_result(expr, at(2027, 4, 5, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2027, 1, 5, 10, 0)), Some(false))
+    }
+    None => fail("月份范围应当可以解析")
+  }
+}
+
+///|
+test "同月和跨年日期关闭规则命中首尾边界" {
+  match parsed("Mo-Su 09:00-17:00; Dec 24-26 off") {
+    Some(expr) => {
+      assert_eq(open_result(expr, at(2026, 12, 23, 10, 0)), Some(true))
+      assert_eq(open_result(expr, at(2026, 12, 24, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2026, 12, 26, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2026, 12, 27, 10, 0)), Some(true))
+    }
+    None => fail("月日范围应当可以解析")
+  }
+  match parsed("Mo-Su 09:00-17:00; Dec 24-Jan 3 off") {
+    Some(expr) => {
+      assert_eq(open_result(expr, at(2026, 12, 24, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2027, 1, 3, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2027, 1, 4, 10, 0)), Some(true))
+    }
+    None => fail("跨月日期范围应当可以解析")
+  }
+}
+
+///|
+test "PH 和 SH 仅在注入日历的匹配日期生效" {
+  match parsed("Mo-Su 09:00-17:00; PH off; SH 10:00-12:00") {
+    Some(expr) => {
+      let calendar : @opening-hours-mbt.HolidayCalendar = {
+        public_holidays: [{ year: 2026, month: 11, day: 2, }],
+        school_holidays: [{ year: 2026, month: 11, day: 3, }],
+      }
+      assert_eq(open_result(expr, at(2026, 11, 2, 10, 0)), Some(true))
+      assert_eq(open_result(expr, at(2026, 11, 3, 10, 0)), Some(true))
+      match
+        @opening-hours-mbt.is_open_with_calendar(
+          expr,
+          at(2026, 11, 2, 10, 0),
+          calendar,
+        ) {
+        Ok(actual) => assert_eq(actual, false)
+        Err(_) => fail("注入 PH 日历后应能求值")
+      }
+      match
+        @opening-hours-mbt.is_open_with_calendar(
+          expr,
+          at(2026, 11, 3, 11, 0),
+          calendar,
+        ) {
+        Ok(actual) => assert_eq(actual, true)
+        Err(_) => fail("注入 SH 日历后应能求值")
+      }
+      match
+        @opening-hours-mbt.is_open_with_calendar(
+          expr,
+          at(2026, 11, 3, 13, 0),
+          calendar,
+        ) {
+        Ok(actual) => assert_eq(actual, false)
+        Err(_) => fail("SH 的普通规则应替换当天原时段")
+      }
+    }
+    None => fail("PH/SH 规则应当可以解析")
+  }
+}
+
+///|
+test "节假日关闭规则会产生可观察的下一状态变化" {
+  match parsed("24/7; PH off") {
+    Some(expr) => {
+      let calendar : @opening-hours-mbt.HolidayCalendar = {
+        public_holidays: [{ year: 2026, month: 11, day: 2, }],
+        school_holidays: [],
+      }
+      match
+        @opening-hours-mbt.next_change_with_calendar(
+          expr,
+          at(2026, 11, 1, 23, 59),
+          calendar,
+        ) {
+        Ok(Some(next)) => {
+          assert_eq(next.date.day, 2)
+          assert_eq(next.hour, 0)
+          assert_eq(next.minute, 0)
+        }
+        _ => fail("PH 日期开始时应当有状态变化")
+      }
+    }
+    None => fail("PH 关闭规则应当可以解析")
+  }
+}

@@ -5,6 +5,17 @@ pub(all) struct EvaluationError {
 }
 
 ///|
+/// Create a calendar with no public or school holidays.
+pub fn empty_holiday_calendar() -> HolidayCalendar {
+  { public_holidays: [], school_holidays: [], }
+}
+
+///|
+fn same_date(left : Date, right : Date) -> Bool {
+  left.year == right.year && left.month == right.month && left.day == right.day
+}
+
+///|
 fn month_length(year : Int32, month : Int32) -> Int32 {
   match month {
     2 => if is_leap_year(year) { 29 } else { 28 }
