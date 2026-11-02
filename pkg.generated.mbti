@@ -2,11 +2,30 @@
 package "wccerty/opening-hours-mbt"
 
 // Values
+pub fn is_open(Expr, DateTime) -> Result[Bool, EvaluationError]
+
+pub fn new_date(Int32, Int32, Int32) -> Result[Date, EvaluationError]
+
+pub fn new_datetime(Date, Int32, Int32) -> Result[DateTime, EvaluationError]
+
+pub fn next_change(Expr, DateTime) -> Result[DateTime?, EvaluationError]
+
+pub fn opening_periods_for_day(Expr, Date) -> Result[Array[TimeRange], EvaluationError]
+
+pub fn opening_periods_for_week(Expr, Date) -> Result[Array[DailySchedule], EvaluationError]
+
 pub fn parse(String) -> Result[Expr, ParseError]
+
+pub fn weekday_of_date(Date) -> Int32
 
 // Errors
 
 // Types and methods
+pub(all) struct DailySchedule {
+  date : Date
+  periods : Array[TimeRange]
+}
+
 pub(all) struct Date {
   year : Int32
   month : Int32
@@ -17,6 +36,10 @@ pub(all) struct DateTime {
   date : Date
   hour : Int32
   minute : Int32
+}
+
+pub(all) struct EvaluationError {
+  message : String
 }
 
 pub(all) struct Expr {
