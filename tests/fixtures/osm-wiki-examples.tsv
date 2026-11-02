@@ -1,0 +1,61 @@
+id	wiki_section	expression	expected_parse
+01	Open on weekdays	Mo-Fr 08:00-17:00	accept
+02	Multiple opening intervals	Mo-Fr 08:00-12:00,13:00-17:30	accept
+03	Multiple days same time periods	Mo,We 08:00-12:00	accept
+04	Multiple days and multiple time periods	Mo-Fr 08:00-12:00,13:00-17:30; Sa 08:00-12:00	accept
+05	Closed on holidays	Mo-Fr 08:00-12:00,13:00-17:30; Sa 08:00-12:00; PH off	accept
+06	Closed on holidays	Mo-Fr 08:00-12:00,13:00-17:30; Sa 08:00-12:00; PH off; SH off	accept
+07	Different hours on holidays	Mo-Fr 08:00-12:00,13:00-17:30; Sa 08:00-12:00; PH 09:00-12:00	accept
+08	Different hours on holidays	Mo-Fr 08:00-12:00,13:00-17:30; Sa 08:00-12:00; SH Mo-Sa 09:00-12:00	accept
+09	Closing after midnight	Mo 20:00-26:00	accept
+10	Closing after midnight	Mo 20:00-02:00	accept
+11	Closing after midnight	Mo 20:00-24:00; Tu 00:00-02:00	accept
+12	Closing after midnight	Mo 20:00-26:00; Tu 20:00-24:00	accept
+13	Exception based on month	Mo 08:00-16:00; Mo[2] 08:00-12:00	reject
+14	Exception based on month	Mo 08:00-16:00; Mo[-2] 08:00-12:00	reject
+15	Exception based on month	Mo 08:00-16:00; Dec off	accept
+16	Exception based on month	Mo-Fr 08:00-16:00; Dec 12 off	accept
+17	Exception based on month	Mo 08:00-16:00; Dec Mo 08:00-12:00	accept
+18	Exception based on month	Mo 08:00-16:00; Jan-Mar Mo 08:00-12:00	accept
+19	Examples	24/7	accept
+20	Examples	Sa-Su 00:00-24:00	accept
+21	Examples	Mo-Fr 08:30-20:00	accept
+22	Examples	Mo 10:00-12:00,12:30-15:00; Tu-Fr 08:00-12:00,12:30-15:00; Sa 08:00-12:00	accept
+23	Examples	Mo-Su 08:00-18:00; Apr 10-15 off; Jun 08:00-14:00; Aug off; Dec 25 off	accept
+24	Examples	Mo-Sa 10:00-20:00; Tu off	accept
+25	Examples	Mo-Sa 10:00-20:00; Tu 10:00-14:00	accept
+26	Examples	Tu-Fr 10:00-16:00, Mo 08:00-18:00 open "limited service", Tu-Fr 08:00-10:00 open "limited service", Tu-Fr 16:00-18:00 open "limited service"	reject
+27	Examples	sunrise-sunset	reject
+28	Examples	(sunrise+02:00)-(sunset-02:00)	reject
+29	Examples	dawn-dusk	reject
+30	Examples	dawn-sunrise, sunset-dusk	reject
+31	Examples	Su 10:00+	reject
+32	Examples	Apr-Oct: Fr-Su 10:00-18:00	accept
+33	Examples	May Mo[-1] -2 days-Sep Mo[1]: Sa-Su 10:00-18:00	reject
+34	Examples	week 01-14 Mo-Su 10:00-17:00	reject
+35	Examples	week 01-53/2 Fr 09:00-12:00; week 02-52/2 We 09:00-12:00	reject
+36	Examples	10:30-19:00; Jan 01-31/2,Feb 01-29/2,Mar 01-31/2,Apr 01-30/2,May 01-31/2,Jun 01-30/2,Jul 01-31/2,Aug 01-31/2,Sep 01-30/2,Oct 01-31/2,Nov 01-30/2,Dec 01-31/2 07:30-13:30; Su 10:00-13:00; Sa off	reject
+37	Examples	Mo-Sa 08:00-13:00,14:00-17:00 || "by appointment"	reject
+38	Examples	Su-Tu 11:00-01:00, We-Th 11:00-03:00, Fr 11:00-06:00, Sa 11:00-07:00	reject
+39	Examples	Mo 11:00-14:00; Tu-Fr 11:00-14:00, 18:00-22:00; Sa 18:00-22:00	reject
+40	Examples	Mo-Fr 11:00-14:00, Tu-Sa 18:00-22:00	reject
+41	Examples	Mo-Th 18:00-01:00, Fr-Sa 18:00-03:00	reject
+42	Examples	Mo 18:00-24:00; Tu-Fr 00:00-01:00,18:00-24:00; Sa 00:00-03:00,18:00-24:00; Su 00:00-03:00	accept
+43	Examples	Mo-Fr 08:00-12:00, We 14:00-18:00	reject
+44	Examples	Mo-Fr 08:00-12:00; We 08:00-12:00,14:00-18:00	accept
+45	Examples	Mo-Su,PH 15:00-03:00; easter -2 days off	reject
+46	Examples	easter-7days - Nov 01: Tu-Sa 10:00-12:00,13:30-17:00; easter-7days - Nov 01: Su,PH 11:00-17:00	reject
+47	Examples	Dec 11-Dec 17: Su 10:00-17:00	accept
+48	Examples	Mo-Fr 09:00-12:30,13:30-17:00; PH -1 day 09:00-12:30; Sa-Su,PH off	reject
+49	Examples	Tu-Sa 09:00-17:00; PH-2days Sa off; PH-1day Sa off; PH off	reject
+50	Examples	Jan 20, Feb 20, Mar 20, Apr 20, May 20, Jun 20, Jul 20, Aug 20, Sep 20, Oct 20, Nov 20, Dec 20 09:00-10:00	reject
+51	Examples	Mo-Fr 12:00-14:00 "winter"	reject
+52	Examples	Mo-Sa open, Mo-Fr 17:00+ closed, Sa 12:00+ closed; Su,PH off	reject
+53	Examples	2026 Dec 01-2026 Dec 23	reject
+54	Examples	closed; 2026 Nov 01-2026 Dec 31: Mo-Fr 09:00-17:00	reject
+55	Comment examples	Mo-Fr 08:00-09:00 open "only service", Mo-Fr 09:00-16:00 open "service and sales"	reject
+56	Comment examples	Mo-Sa "on appointment"	reject
+57	Comment examples	Mo 12:00-14:00 open "female only", Mo 14:00-16:00 open "male only"	reject
+58	Comment examples	Mo-Sa 08:00-13:00,14:00-17:00 || "on appointment"	reject
+59	Comment examples	Tu 17:00-19:30 "days on schedule (see website)"	reject
+60	Comment examples	Mo-Sa 08:00-13:00,14:00-17:00 || "on appointment"; PH off	reject
