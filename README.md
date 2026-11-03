@@ -142,10 +142,6 @@ moon build web/bridge --target js --release
 
 GitHub Actions 在每次推送和 Pull Request 上运行格式检查、类型检查、测试及三个构建目标。
 
-## 查重结论
-
-查重日期：2026-11-02。`moon search` 对 `opening hours`、`opening_hours`、`opening hours parser`、`business hours`、`osm`、`opening`、`营业时间` 七组词的结果均为零条专用实现；GitHub 的 `opening_hours language:MoonBit` 与 `"opening hours" language:MoonBit` 搜索也没有找到 MoonBit 的 OSM opening-hours 专用项目。检索到的相似名称结果与该用途无关。完整命令与结果摘要见 [`docs/dedup.md`](docs/dedup.md)。代码依据 OSM Wiki 规范独立编写，未移植已有实现。
-
 ## 使用场景
 
 1. **门店“营业中”标识**：按当前本地时间刷新营业状态，并展示下次开门或关门时刻。
