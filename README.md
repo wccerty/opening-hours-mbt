@@ -113,6 +113,7 @@ python -m http.server 8080 --directory web/demo
 | 语法 | 当前支持情况 |
 | --- | --- |
 | 星期集合与范围，如 `Mo,We`、`Mo-Fr`、`Fr-Mo` | 支持 |
+| 月内第 N 个星期几，如 `Mo[2]`、`Mo[-1]` | 支持单个序号 `1` 至 `5`、`-1` 至 `-5`；不支持序号列表或范围 |
 | 一天多个时间段，如 `09:00-12:00,13:00-18:00` | 支持 |
 | 分号规则与顺序覆盖 | 支持 |
 | `24/7`、`off`、`closed` | 支持 |
@@ -120,14 +121,14 @@ python -m http.server 8080 --directory web/demo
 | 月份集合与范围，如 `Jan,Mar`、`Jan-Mar` | 支持 |
 | 月日与跨年日期范围，如 `Dec 24-26`、`Dec 24-Jan 3` | 支持 |
 | `PH`、`SH` | 支持；由调用者注入明确日期 |
-| 日出日落等变量时间、周编号、nth weekday、Easter 与节日偏移 | 暂不支持 |
+| 日出日落等变量时间、周编号、Easter 与节日偏移 | 暂不支持 |
 | additional / fallback 规则、注释和开放结束时间 | 暂不支持 |
 
 无法识别的语法返回带位置的 `ParseError`。完整范围和后续工作见 [`docs/plans/2026-11-02-opening-hours-plan.md`](docs/plans/2026-11-02-opening-hours-plan.md)。
 
 ## 测试
 
-当前 `moon test` 包含 32 条测试，全部通过；其中包含 60 条 OSM Wiki 表达式解析断言（27 条应由当前子集接受，33 条应返回不支持语法错误）。样例来源和分类见 [`docs/wiki-regression.md`](docs/wiki-regression.md) 与 [`tests/fixtures/osm-wiki-examples.tsv`](tests/fixtures/osm-wiki-examples.tsv)。OSM Wiki 样例集有独立的来源与许可说明；仓库根目录 Apache-2.0 许可不替代该样例集的来源标注，详见回归样例文档。
+当前 `moon test` 包含 35 条测试，全部通过；其中包含 60 条 OSM Wiki 表达式解析断言（29 条应由当前子集接受，31 条应返回不支持语法错误）。样例来源和分类见 [`docs/wiki-regression.md`](docs/wiki-regression.md) 与 [`tests/fixtures/osm-wiki-examples.tsv`](tests/fixtures/osm-wiki-examples.tsv)。OSM Wiki 样例集有独立的来源与许可说明；仓库根目录 Apache-2.0 许可不替代该样例集的来源标注，详见回归样例文档。
 
 本地完整检查：
 

@@ -55,11 +55,11 @@ test "OSM Wiki 样例按支持子集解析" {
   )
   count += 1
   assert_true(
-    @opening-hours-mbt.parse("Mo 08:00-16:00; Mo[2] 08:00-12:00") is Err(_),
+    @opening-hours-mbt.parse("Mo 08:00-16:00; Mo[2] 08:00-12:00") is Ok(_),
   )
   count += 1
   assert_true(
-    @opening-hours-mbt.parse("Mo 08:00-16:00; Mo[-2] 08:00-12:00") is Err(_),
+    @opening-hours-mbt.parse("Mo 08:00-16:00; Mo[-2] 08:00-12:00") is Ok(_),
   )
   count += 1
   assert_true(@opening-hours-mbt.parse("Mo 08:00-16:00; Dec off") is Ok(_))

@@ -11,8 +11,8 @@ id	wiki_section	expression	expected_parse
 10	Closing after midnight	Mo 20:00-02:00	accept
 11	Closing after midnight	Mo 20:00-24:00; Tu 00:00-02:00	accept
 12	Closing after midnight	Mo 20:00-26:00; Tu 20:00-24:00	accept
-13	Exception based on month	Mo 08:00-16:00; Mo[2] 08:00-12:00	reject
-14	Exception based on month	Mo 08:00-16:00; Mo[-2] 08:00-12:00	reject
+13	Exception based on month	Mo 08:00-16:00; Mo[2] 08:00-12:00	accept
+14	Exception based on month	Mo 08:00-16:00; Mo[-2] 08:00-12:00	accept
 15	Exception based on month	Mo 08:00-16:00; Dec off	accept
 16	Exception based on month	Mo-Fr 08:00-16:00; Dec 12 off	accept
 17	Exception based on month	Mo 08:00-16:00; Dec Mo 08:00-12:00	accept

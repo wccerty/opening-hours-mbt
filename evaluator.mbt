@@ -16,12 +16,30 @@ fn rule_matches_date(
   date : Date,
   calendar : HolidayCalendar,
 ) -> Bool {
-  if rule.weekdays.length() > 0 {
+  if rule.weekdays.length() > 0 || rule.nth_weekdays.length() > 0 {
     let weekday = weekday_of_date(date)
     let mut found = false
     for selected in rule.weekdays {
       if selected == weekday {
         found = true
+      }
+    }
+    let days_in_month = month_length(date.year, date.month)
+    for selected in rule.nth_weekdays {
+      if selected.weekday == weekday {
+        let occurrence = if selected.nth > 0 {
+          (date.day - 1) / 7 + 1
+        } else {
+          (days_in_month - date.day) / 7 + 1
+        }
+        let expected = if selected.nth > 0 {
+          selected.nth
+        } else {
+          -selected.nth
+        }
+        if occurrence == expected {
+          found = true
+        }
       }
     }
     if !found {

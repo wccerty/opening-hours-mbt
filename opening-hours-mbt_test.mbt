@@ -27,6 +27,29 @@ test "解析单日集合和跨周星期范围" {
 }
 
 ///|
+test "解析月内第 N 个和倒数第 N 个星期选择器" {
+  match @opening-hours-mbt.parse("Mo[2] 09:00-12:00; Mo[-2] 13:00-17:00") {
+    Ok(expr) => {
+      assert_eq(expr.rules[0].weekdays.length(), 0)
+      assert_eq(expr.rules[0].nth_weekdays.length(), 1)
+      assert_eq(expr.rules[0].nth_weekdays[0].weekday, 0)
+      assert_eq(expr.rules[0].nth_weekdays[0].nth, 2)
+      assert_eq(expr.rules[1].nth_weekdays[0].nth, -2)
+    }
+    Err(_) => fail("月内第 N 个星期选择器应当可以解析")
+  }
+  match @opening-hours-mbt.parse("Mo,Tu[2],Fr[-1] 09:00-12:00") {
+    Ok(expr) => {
+      assert_eq(expr.rules[0].weekdays, [0])
+      assert_eq(expr.rules[0].nth_weekdays.length(), 2)
+      assert_eq(expr.rules[0].nth_weekdays[0].weekday, 1)
+      assert_eq(expr.rules[0].nth_weekdays[1].weekday, 4)
+    }
+    Err(_) => fail("混合星期和月内序号列表应当可以解析")
+  }
+}
+
+///|
 test "解析全天与关闭关键字" {
   match @opening-hours-mbt.parse("24/7; Sa off; Su closed") {
     Ok(expr) => {
@@ -72,6 +95,21 @@ test "拒绝无效星期缩写并指出字符位置" {
     }
     Ok(_) => fail("无效星期缩写必须报错")
   }
+}
+
+///|
+test "拒绝范围外的月内星期序号并指出位置" {
+  match @opening-hours-mbt.parse("Mo[0] 09:00-10:00") {
+    Err(error) => {
+      assert_eq(error.position, 3)
+      assert_true(error.message.contains("星期序号"))
+    }
+    Ok(_) => fail("0 不是有效的月内星期序号")
+  }
+  assert_true(@opening-hours-mbt.parse("Mo[6] 09:00-10:00") is Err(_))
+  assert_true(@opening-hours-mbt.parse("Mo[2 09:00-10:00") is Err(_))
+  assert_true(@opening-hours-mbt.parse("Mo[1,3] 09:00-10:00") is Err(_))
+  assert_true(@opening-hours-mbt.parse("Mo[2-4] 09:00-10:00") is Err(_))
 }
 
 ///|
@@ -328,6 +366,20 @@ test "月份范围与日期范围共同限制营业日" {
       assert_eq(open_result(expr, at(2027, 1, 5, 10, 0)), Some(false))
     }
     None => fail("月份范围应当可以解析")
+  }
+}
+
+///|
+test "月内第 N 个星期选择器按正序和倒序日期求值" {
+  match parsed("Mo[2] 09:00-12:00; Mo[-1] 13:00-16:00; Mo[-2] 08:00-09:00") {
+    Some(expr) => {
+      assert_eq(open_result(expr, at(2026, 6, 1, 10, 0)), Some(false))
+      assert_eq(open_result(expr, at(2026, 6, 8, 10, 0)), Some(true))
+      assert_eq(open_result(expr, at(2026, 6, 22, 8, 30)), Some(true))
+      assert_eq(open_result(expr, at(2026, 6, 29, 14, 0)), Some(true))
+      assert_eq(open_result(expr, at(2026, 6, 29, 12, 0)), Some(false))
+    }
+    None => fail("月内第 N 个星期规则应当可以求值")
   }
 }
 

@@ -80,6 +80,7 @@ pub(all) struct ParseError {
 
 pub(all) struct Rule {
   weekdays : Array[Int32]
+  nth_weekdays : Array[WeekdayOccurrence]
   months : Array[Int32]
   dates : Array[MonthDayRange]
   holidays : Array[HolidayKind]
@@ -96,6 +97,11 @@ pub(all) enum RuleState {
 pub(all) struct TimeRange {
   start_minute : Int32
   end_minute : Int32
+}
+
+pub(all) struct WeekdayOccurrence {
+  weekday : Int32
+  nth : Int32
 }
 
 // Type aliases

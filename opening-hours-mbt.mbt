@@ -45,6 +45,13 @@ pub(all) struct HolidayCalendar {
 }
 
 ///|
+/// A weekday occurrence within a month; negative `nth` counts from month end.
+pub(all) struct WeekdayOccurrence {
+  weekday : Int32
+  nth : Int32
+}
+
+///|
 pub(all) enum RuleState {
   Open
   Closed
@@ -54,6 +61,7 @@ pub(all) enum RuleState {
 /// One semicolon-separated OSM rule.
 pub(all) struct Rule {
   weekdays : Array[Int32]
+  nth_weekdays : Array[WeekdayOccurrence]
   months : Array[Int32]
   dates : Array[MonthDayRange]
   holidays : Array[HolidayKind]
@@ -128,56 +136,186 @@ fn add_weekday(days : Array[Int32], day : Int32) -> Unit {
 }
 
 ///|
+fn add_weekday_occurrence(
+  occurrences : Array[WeekdayOccurrence],
+  weekday : Int32,
+  nth : Int32,
+) -> Unit {
+  let mut found = false
+  for existing in occurrences {
+    if existing.weekday == weekday && existing.nth == nth {
+      found = true
+    }
+  }
+  if !found {
+    occurrences.push({ weekday, nth, })
+  }
+}
+
+///|
+fn parse_nth_ordinal(
+  value : String,
+  position : Int32,
+) -> Result[Int32, ParseError] {
+  match value {
+    "1" => Ok(1)
+    "2" => Ok(2)
+    "3" => Ok(3)
+    "4" => Ok(4)
+    "5" => Ok(5)
+    "-1" => Ok(-1)
+    "-2" => Ok(-2)
+    "-3" => Ok(-3)
+    "-4" => Ok(-4)
+    "-5" => Ok(-5)
+    _ =>
+      Err(
+        parse_error(
+          "月内星期序号仅支持单个 1 至 5 或 -1 至 -5", position,
+        ),
+      )
+  }
+}
+
+///|
+fn parse_weekday_part(
+  part : String,
+  position : Int32,
+  days : Array[Int32],
+  occurrences : Array[WeekdayOccurrence],
+) -> Result[Unit, ParseError] {
+  let open_bracket = find_char(part, '[')
+  let close_bracket = find_char(part, ']')
+  if open_bracket >= 0 || close_bracket >= 0 {
+    if open_bracket != 2 ||
+      close_bracket != part.length() - 1 ||
+      find_char(part[open_bracket + 1:close_bracket].to_owned(), '[') >= 0 ||
+      find_char(part[open_bracket + 1:close_bracket].to_owned(), ']') >= 0 {
+      let error_offset = if open_bracket >= 0 {
+        open_bracket
+      } else {
+        close_bracket
+      }
+      return Err(
+        parse_error(
+          "月内星期选择器格式无效",
+          position + error_offset,
+        ),
+      )
+    }
+    let weekday = match weekday_code(part[:open_bracket].to_owned(), position) {
+      Ok(day) => day
+      Err(error) => return Err(error)
+    }
+    let nth = match
+      parse_nth_ordinal(
+        part[open_bracket + 1:close_bracket].to_owned(),
+        position + open_bracket + 1,
+      ) {
+      Ok(value) => value
+      Err(error) => return Err(error)
+    }
+    add_weekday_occurrence(occurrences, weekday, nth)
+    return Ok(())
+  }
+
+  let dash = find_char(part, '-')
+  if dash < 0 {
+    match weekday_code(part, position) {
+      Ok(day) => add_weekday(days, day)
+      Err(error) => return Err(error)
+    }
+  } else {
+    if find_char(part[dash + 1:].to_owned(), '-') >= 0 {
+      return Err(
+        parse_error("星期范围只能包含一个连字符", position + dash),
+      )
+    }
+    let first = part[:dash].to_owned()
+    let last = part[dash + 1:].to_owned()
+    let from = match weekday_code(first, position) {
+      Ok(day) => day
+      Err(error) => return Err(error)
+    }
+    let to = match weekday_code(last, position + dash + 1) {
+      Ok(day) => day
+      Err(error) => return Err(error)
+    }
+    let mut day = from
+    let mut count = 0
+    while count < 7 {
+      add_weekday(days, day)
+      if day == to {
+        break
+      }
+      day = (day + 1) % 7
+      count += 1
+    }
+  }
+  Ok(())
+}
+
+///|
 fn parse_weekdays(
   value : String,
   position : Int32,
-) -> Result[Array[Int32], ParseError] {
+) -> Result[(Array[Int32], Array[WeekdayOccurrence]), ParseError] {
   let days : Array[Int32] = []
-  let mut part_offset = 0
-  for part_view in value.split(",") {
-    let part = part_view.to_owned()
-    let dash = find_char(part, '-')
-    if dash < 0 {
-      match weekday_code(part, position + part_offset) {
-        Ok(day) => add_weekday(days, day)
-        Err(error) => return Err(error)
-      }
-    } else {
-      if find_char(part[dash + 1:].to_owned(), '-') >= 0 {
+  let occurrences : Array[WeekdayOccurrence] = []
+  let chars = value.to_array()
+  let mut part_start = 0
+  let mut bracket_start = -1
+  for i in 0..<chars.length() {
+    if chars[i] == '[' {
+      if bracket_start >= 0 {
         return Err(
-          parse_error(
-            "星期范围只能包含一个连字符",
-            position + part_offset + dash,
-          ),
+          parse_error("月内星期选择器不能嵌套", position + i),
         )
       }
-      let first = part[:dash].to_owned()
-      let last = part[dash + 1:].to_owned()
-      let from = match weekday_code(first, position + part_offset) {
-        Ok(day) => day
+      bracket_start = i
+    } else if chars[i] == ']' {
+      if bracket_start < 0 {
+        return Err(
+          parse_error("月内星期选择器缺少左方括号", position + i),
+        )
+      }
+      bracket_start = -1
+    } else if chars[i] == ',' && bracket_start < 0 {
+      match
+        parse_weekday_part(
+          value[part_start:i].to_owned(),
+          position + part_start,
+          days,
+          occurrences,
+        ) {
+        Ok(_) => ()
         Err(error) => return Err(error)
       }
-      let to = match weekday_code(last, position + part_offset + dash + 1) {
-        Ok(day) => day
-        Err(error) => return Err(error)
-      }
-      let mut day = from
-      let mut count = 0
-      while count < 7 {
-        add_weekday(days, day)
-        if day == to {
-          break
-        }
-        day = (day + 1) % 7
-        count += 1
-      }
+      part_start = i + 1
     }
-    part_offset += part.length() + 1
   }
-  if days.length() == 0 {
+  if bracket_start >= 0 {
+    return Err(
+      parse_error(
+        "月内星期选择器缺少右方括号",
+        position + bracket_start,
+      ),
+    )
+  }
+  match
+    parse_weekday_part(
+      value[part_start:].to_owned(),
+      position + part_start,
+      days,
+      occurrences,
+    ) {
+    Ok(_) => ()
+    Err(error) => return Err(error)
+  }
+  if days.length() == 0 && occurrences.length() == 0 {
     return Err(parse_error("星期选择器不能为空", position))
   }
-  Ok(days)
+  Ok((days, occurrences))
 }
 
 ///|
@@ -461,6 +599,7 @@ fn parse_rule(
 
   let first_position = base_position + start
   let weekdays : Array[Int32] = []
+  let nth_weekdays : Array[WeekdayOccurrence] = []
   let months : Array[Int32] = []
   let dates : Array[MonthDayRange] = []
   let holidays : Array[HolidayKind] = []
@@ -533,10 +672,18 @@ fn parse_rule(
           )
         }
         match parse_weekdays(token, token_position) {
-          Ok(parsed) =>
+          Ok((parsed, parsed_nth)) => {
             for day in parsed {
               add_weekday(weekdays, day)
             }
+            for occurrence in parsed_nth {
+              add_weekday_occurrence(
+                nth_weekdays,
+                occurrence.weekday,
+                occurrence.nth,
+              )
+            }
+          }
           Err(error) => return Err(error)
         }
       } else if is_month_word(token) {
@@ -643,6 +790,7 @@ fn parse_rule(
   }
   Ok({
     weekdays,
+    nth_weekdays,
     months,
     dates,
     holidays,
@@ -655,8 +803,8 @@ fn parse_rule(
 ///|
 /// Parse an OSM `opening_hours` expression in the supported syntax subset.
 ///
-/// The first release supports weekday selectors, time ranges, semicolon rules,
-/// `24/7`, `off`, and `closed`. Unsupported syntax returns its source position.
+/// The supported syntax includes weekday and nth-weekday selectors, time ranges,
+/// semicolon rules, `24/7`, `off`, and `closed`. Unsupported syntax returns its source position.
 pub fn parse(value : String) -> Result[Expr, ParseError] {
   let rules : Array[Rule] = []
   let chars = value.to_array()
