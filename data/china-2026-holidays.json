@@ -2,7 +2,7 @@
   "country": "CN",
   "year": 2026,
   "source": "国务院办公厅关于2026年部分节假日安排的通知（国办发明电〔2025〕7号）",
-  "source_url": "https://www.wuhan.gov.cn/zwgk/tzgg/202511/t20251105_2672471.shtml",
+  "source_url": "https://www.beijing.gov.cn/cs/gncs/zcwj/202603/t20260327_4568275.html",
   "calendar_note": "public_holidays lists all official rest dates in the notice for use as a practical PH example. Substitute workdays are recorded separately and are not PH dates. This is an example calendar, not a universal mapping for every OSM region.",
   "public_holidays": [
     "2026-01-01", "2026-01-02", "2026-01-03",

@@ -28,6 +28,8 @@ moon check
 moon test
 ```
 
+截至 2026-11-03，`moon search "wccerty/opening-hours-mbt"` 未找到已发布的包版本。当前请通过源码克隆和本地工作区引用使用；发布到 MoonBit 包索引后会在此补充注册表安装命令。
+
 在另一个 MoonBit 模块中本地引用时，把此仓库和应用放在同一个 `moon.work` 工作区：
 
 ```toml
@@ -125,7 +127,7 @@ python -m http.server 8080 --directory web/demo
 
 ## 测试
 
-当前 `moon test` 包含 32 条测试，全部通过；其中包含 60 条 OSM Wiki 表达式解析断言（27 条应由当前子集接受，33 条应返回不支持语法错误）。样例来源和分类见 [`docs/wiki-regression.md`](docs/wiki-regression.md) 与 [`tests/fixtures/osm-wiki-examples.tsv`](tests/fixtures/osm-wiki-examples.tsv)。
+当前 `moon test` 包含 32 条测试，全部通过；其中包含 60 条 OSM Wiki 表达式解析断言（27 条应由当前子集接受，33 条应返回不支持语法错误）。样例来源和分类见 [`docs/wiki-regression.md`](docs/wiki-regression.md) 与 [`tests/fixtures/osm-wiki-examples.tsv`](tests/fixtures/osm-wiki-examples.tsv)。OSM Wiki 样例集有独立的来源与许可说明；仓库根目录 Apache-2.0 许可不替代该样例集的来源标注，详见回归样例文档。
 
 本地完整检查：
 
